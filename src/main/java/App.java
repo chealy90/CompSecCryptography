@@ -6,7 +6,15 @@ public class App {
         int menuChoice = 0;
         while (menuChoice != 3){
             menuChoice = runMenu();
-            System.out.println("You chose: " + menuChoice);
+            switch (menuChoice) {
+                case 1:
+                    runEncryptFile();
+                    break;
+                case 2:
+                    runDecryptFile();
+                case 3:
+                    System.out.println("--Thank you for using the encryption tool--");
+            }
         }
     }
 
@@ -23,7 +31,26 @@ public class App {
             System.out.println("--invalid choice--");
             runMenu();
         }
-
+        kb.close();
         return option;
     }
+
+    public static void runEncryptFile(){
+        Scanner kb = new Scanner(System.in);
+        System.out.println("--Encrypting--");
+        String filename = kb.nextLine();
+        String filePText = readFileContents(filename);
+
+
+    }
+
+    public static void runDecryptFile(){
+        System.out.println("Decrypting");
+    }
+
+    //file IO methods
+    public static String readFileContents(String filename){
+        return "";
+    }
+
 }
