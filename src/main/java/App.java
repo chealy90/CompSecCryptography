@@ -1,3 +1,7 @@
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 
@@ -38,8 +42,13 @@ public class App {
     public static void runEncryptFile(){
         Scanner kb = new Scanner(System.in);
         System.out.println("--Encrypting--");
+
         String filename = kb.nextLine();
         String filePText = readFileContents(filename);
+        if (filePText == null){
+            return;
+        }
+
 
 
     }
@@ -50,7 +59,33 @@ public class App {
 
     //file IO methods
     public static String readFileContents(String filename){
-        return "";
+        try {
+            FileReader fr = new FileReader(filename);
+            String contents = "";
+            int i;
+            while ((i=fr.read()) != -1){
+                contents += String.valueOf((char) i);
+            }
+            fr.close();
+            return contents;
+        }
+        catch (FileNotFoundException e){
+            System.out.println("--error: file not found--");
+            return null;
+        } catch (IOException e){
+            System.out.println("--error: a problem occurred while reading the file");
+            return null;
+        }
+    }
+
+    public static void writeToFile(String filename, String contents) throws FileNotFoundException, IOException{
+        FileWriter fw = new FileWriter(filename);
+
+        for (int i=0;i<contents.length();i++){
+            fw.write(contents.charAt(i));
+        }
+
+        fw.close();
     }
 
 }
