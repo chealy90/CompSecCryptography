@@ -16,8 +16,11 @@ import java.security.spec.KeySpec;
 import java.util.*;
 
 public class App {
+    private static String salt = "TestingSalt12345";
     public static void main(String[] args) {
         //encryptAES("Lorem ipsum dolor sit amet");
+        generateKey();
+
         int menuChoice = 0;
         while (menuChoice != 3){
             menuChoice = runMenu();
@@ -34,7 +37,7 @@ public class App {
         }
     }
 
-
+    //APP RUNNING METHODS
     public static int runMenu(){
         Scanner kb = new Scanner(System.in);
         System.out.println("--- Please select an option ---");
@@ -52,36 +55,63 @@ public class App {
     }
 
     public static void runEncryptFile(){
+        //get file data
         Scanner kb = new Scanner(System.in);
         System.out.println("--Encrypting--");
-        System.out.print("Filename:");
+        System.out.print("--Filename:");
         String filename = kb.nextLine();
         String filePText = readFileContents(filename);
+
+
         if (filePText == null){
             return;
         }
         try {
-            String cText = encryptAES(filePText, "TestingKey", "TestingSalt");
-            System.out.println("CText: " + cText);
-
-            String pText = decryptAES(cText, "TestingKey", "TestingSalt");
-            System.out.println("PText: " + pText);
+            String key = generateKey();
+            System.out.println("--Your Key is:"+key);
+            String cText = encryptAES(filePText, key);
+            writeToFile("ciphertext.txt", cText);
 
         } catch (Exception e){
-            System.out.println("Error");
+            System.out.println("--Error--");
         }
-
-
-
-
     }
 
     public static void runDecryptFile(){
-        System.out.println("Decrypting");
+        Scanner kb = new Scanner(System.in);
+        System.out.println("--Decrypting--");
+        System.out.print("Filename:");
+        String filename = kb.nextLine();
+        String fileCText = readFileContents(filename);
+        if (fileCText == null){
+            return;
+        }
+        try {
+            System.out.println("Enter your key:");
+            String key = kb.next();
+            kb.nextLine();
+            String pText = decryptAES(fileCText, key);
+            System.out.println("Ptext: " + pText);
+            writeToFile("plaintext.txt", pText);
+            //System.out.println(pText);
+
+        } catch (Exception e){
+            System.out.println("Error");
+            e.printStackTrace();
+        }
     }
 
 
-    public static String encryptAES(String stringToEncrypt, String initialSecretKey, String salt) throws NoSuchAlgorithmException,
+    //ENCRYPTION AND DECRYPTION METHODS
+    public static String generateKey(){
+        SecureRandom sr = new SecureRandom();
+        byte[] bytes = new byte[16];
+        sr.nextBytes(bytes);
+        return Base64.getEncoder().encodeToString(bytes);
+    }
+
+
+    public static String encryptAES(String stringToEncrypt, String initialSecretKey) throws NoSuchAlgorithmException,
             InvalidKeySpecException,
             NoSuchPaddingException,
             InvalidAlgorithmParameterException,
@@ -97,7 +127,7 @@ public class App {
         SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
         //create keyspec
         KeySpec spec = new PBEKeySpec(
-                initialSecretKey.toCharArray(), salt.getBytes(), 65536, 256);
+                initialSecretKey.toCharArray(), App.salt.getBytes(), 65536, 256);
         SecretKey tmp = factory.generateSecret(spec);
         SecretKeySpec secretKey = new SecretKeySpec(tmp.getEncoded(), "AES");
 
@@ -112,7 +142,7 @@ public class App {
     }
 
 
-    public static String decryptAES(String stringToDecrypt, String initialSecretKey, String salt) throws NoSuchAlgorithmException,
+    public static String decryptAES(String stringToDecrypt, String initialSecretKey) throws NoSuchAlgorithmException,
             InvalidKeySpecException,
             NoSuchPaddingException,
             InvalidAlgorithmParameterException,
@@ -131,7 +161,7 @@ public class App {
 
         // Create KeySpec object and assign with
         // constructor
-        KeySpec spec = new PBEKeySpec(initialSecretKey.toCharArray(), salt.getBytes(), 65536, 256);
+        KeySpec spec = new PBEKeySpec(initialSecretKey.toCharArray(), App.salt.getBytes(), 65536, 256);
         SecretKey tmp = factory.generateSecret(spec);
         SecretKeySpec secretKey = new SecretKeySpec(tmp.getEncoded(), "AES");
 
@@ -142,7 +172,11 @@ public class App {
     }
 
 
-    //file IO methods
+
+
+
+
+    //FILE IO METHODS
     public static String readFileContents(String filename){
         try {
             String path = "./src/assets/" + filename;
@@ -165,11 +199,12 @@ public class App {
     }
 
     public static void writeToFile(String filename, String contents) throws FileNotFoundException, IOException{
-        FileWriter fw = new FileWriter(filename);
-
+        String path = "./src/assets/" + filename;
+        FileWriter fw = new FileWriter(path, false);
         for (int i=0;i<contents.length();i++){
             fw.write(contents.charAt(i));
         }
+        System.out.println("--Written successfully");
 
         fw.close();
     }
