@@ -18,9 +18,6 @@ import java.util.*;
 public class App {
     private static String salt = "TestingSalt12345";
     public static void main(String[] args) {
-        //encryptAES("Lorem ipsum dolor sit amet");
-        generateKey();
-
         int menuChoice = 0;
         while (menuChoice != 3){
             menuChoice = runMenu();
@@ -30,6 +27,7 @@ public class App {
                     break;
                 case 2:
                     runDecryptFile();
+                    break;
                 case 3:
                     System.out.println("--Thank you for using the encryption tool--");
                     break;
@@ -47,9 +45,13 @@ public class App {
             System.out.print("Your choice:");
             option = kb.nextInt();
             kb.nextLine();
+
         } catch (InputMismatchException e){
             System.out.println("--invalid choice--");
-            runMenu();
+            option = runMenu();
+        } catch (Exception e) {
+            System.out.println("--an error occurred, please try again--");
+            option = runMenu();
         }
         return option;
     }
@@ -58,46 +60,41 @@ public class App {
         //get file data
         Scanner kb = new Scanner(System.in);
         System.out.println("--Encrypting--");
-        System.out.print("--Filename:");
+        System.out.print("\tFilename:");
         String filename = kb.nextLine();
         String filePText = readFileContents(filename);
-
 
         if (filePText == null){
             return;
         }
         try {
             String key = generateKey();
-            System.out.println("--Your Key is:"+key);
+            System.out.println("\tYour Key is:"+key);
             String cText = encryptAES(filePText, key);
             writeToFile("ciphertext.txt", cText);
 
         } catch (Exception e){
-            System.out.println("--Error--");
+            System.out.println("--An error occurred while encrypting your file, please try again--");
         }
     }
 
     public static void runDecryptFile(){
         Scanner kb = new Scanner(System.in);
         System.out.println("--Decrypting--");
-        System.out.print("Filename:");
+        System.out.print("\tFilename:");
         String filename = kb.nextLine();
         String fileCText = readFileContents(filename);
         if (fileCText == null){
             return;
         }
         try {
-            System.out.println("Enter your key:");
+            System.out.print("\tEnter your key:");
             String key = kb.next();
             kb.nextLine();
             String pText = decryptAES(fileCText, key);
-            System.out.println("Ptext: " + pText);
             writeToFile("plaintext.txt", pText);
-            //System.out.println(pText);
-
         } catch (Exception e){
-            System.out.println("Error");
-            e.printStackTrace();
+            System.out.println("--an error occurred while decrypting your file, please try again--");
         }
     }
 
@@ -126,14 +123,12 @@ public class App {
 
         SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
         //create keyspec
-        KeySpec spec = new PBEKeySpec(
-                initialSecretKey.toCharArray(), App.salt.getBytes(), 65536, 256);
+        KeySpec spec = new PBEKeySpec(initialSecretKey.toCharArray(), App.salt.getBytes(), 65536, 256);
         SecretKey tmp = factory.generateSecret(spec);
         SecretKeySpec secretKey = new SecretKeySpec(tmp.getEncoded(), "AES");
 
         Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
         cipher.init(Cipher.ENCRYPT_MODE, secretKey, ivspec);
-        System.out.println(secretKey.getEncoded());
 
         // Return encrypted string
         return Base64.getEncoder().encodeToString(
@@ -192,7 +187,8 @@ public class App {
         catch (FileNotFoundException e){
             System.out.println("--error: file not found--");
             return null;
-        } catch (IOException e){
+        }
+        catch (IOException e){
             System.out.println("--error: a problem occurred while reading the file");
             return null;
         }
@@ -204,8 +200,7 @@ public class App {
         for (int i=0;i<contents.length();i++){
             fw.write(contents.charAt(i));
         }
-        System.out.println("--Written successfully");
-
+        System.out.println("--\tWritten successfully to: "+ filename + " --");
         fw.close();
     }
 
